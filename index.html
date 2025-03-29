@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            background-color: #FFF9E6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Georgia', serif;
+        }
+        .card {
+            width: 600px;
+            height: auto;
+            min-height: 800px;
+            background: linear-gradient(to bottom, #FEF6E4, #FFEDC2);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            border: 1px solid #E8D9B5;
+            margin: 20px;
+        }
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(to right, #D4AF37, #F9D423, #D4AF37);
+        }
+        h1 {
+            color: #D4AF37;
+            font-family: 'Dancing Script', cursive;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .poem {
+            font-family: 'Caveat', cursive;
+            font-size: 22px;
+            line-height: 1.6;
+            color: #5A4A3A;
+            text-align: left;
+            margin: 0 auto;
+            max-width: 500px;
+            min-height: 400px;
+        }
+        .poem p {
+            margin: 0 0 15px 0;
+            opacity: 0;
+            height: 1.6em;
+        }
+        .signature {
+            margin-top: 30px;
+            font-family: 'Dancing Script', cursive;
+            font-style: italic;
+            color: #D4AF37;
+            font-size: 24px;
+            text-align: right;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .stars {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #D4AF37;
+            opacity: 0.6;
+        }
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #D4AF37;
+            animation: blink 0.7s infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        audio { 
+            display: none; 
+        }
+        .music-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #D4AF37;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        #startOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: #D4AF37;
+            font-family: 'Dancing Script', cursive;
+            font-size: 2rem;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio elements with local paths -->
+    <audio id="typingSound" loop>
+        <source src="typing.mp3" type="audio/mpeg">
+        Your browser doesn't support audio.
+    </audio>
+    <audio id="confettiSound">
+        <source src="confetti.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="backgroundMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Start overlay for audio permissions -->
+    <div id="startOverlay">
+        <div>
+            <p>To My Felix Felicis</p>
+            <small>Click anywhere to begin</small>
+        </div>
+    </div>
+
+    <button class="music-btn" id="musicBtn">♫</button>
+
+    <div class="card" style="display:none;">
+        <div class="stars">✨</div>
+        <h1>To My Felix Felicis</h1>
+        <div class="poem" id="poem"></div>
+        <div class="signature" id="signature">Happy birthday, my love, my charm, my friend.</div>
+    </div>
+
+    <script>
+        // Poem lines
+        const poemLines = [
+            "A decade has passed, yet nothing has changed,",
+            "Your laughter still echoes, though oceans stretch far,",
+            "A space between time zones, a world set apart,",
+            "Yet distance could never unbraid us at heart.",
+            "",
+            "You've stood like a lighthouse through storm and through tide,",
+            "A steady, soft beacon, forever my guide.",
+            "Not every day holds a message or call,",
+            "But I carry you with me—no distance at all.",
+            "",
+            "You know my silence, my unspoken fears,",
+            "You've held my heart through the loneliest years.",
+            "With words or without, with presence or space,",
+            "You remain my safe home, my familiar place.",
+            "",
+            "And just like that potion, golden and rare,",
+            "You bring me good fortune with love in the air.",
+            "My Felix Felicis, my luck and my light,",
+            "You make even darkness feel soft and bright.",
+            "",
+            "So on this day, though I'm not by your side,",
+            "Know that I'm grateful, with love swelled in pride.",
+            "For a sister not born but chosen instead,",
+            "Who walks in my story, who lives in my thread."
+        ];
+
+        // DOM elements
+        const poemElement = document.getElementById('poem');
+        const signatureElement = document.getElementById('signature');
+        const typingSound = document.getElementById('typingSound');
+        const confettiSound = document.getElementById('confettiSound');
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        const startOverlay = document.getElementById('startOverlay');
+        const card = document.querySelector('.card');
+
+        // Typewriter settings
+        let lineIndex = 0;
+        let charIndex = 0;
+        let currentParagraph = null;
+        const typingSpeed = 30;
+        const pauseBetweenLines = 1000;
+        let soundTimeout;
+        let isMusicPlaying = false;
+
+        // Initialize poem with empty paragraphs
+        poemLines.forEach(() => {
+            poemElement.appendChild(document.createElement('p'));
+        });
+
+        // Start when user clicks overlay
+        startOverlay.addEventListener('click', function() {
+            this.style.display = 'none';
+            card.style.display = 'block';
+            initAudio();
+            typeWriter();
+        });
+
+        // Audio initialization
+        function initAudio() {
+            // Set volumes
+            backgroundMusic.volume = 0.3;
+            typingSound.volume = 0.2;
+            
+            // Start music
+            backgroundMusic.play()
+                .then(() => {
+                    isMusicPlaying = true;
+                    musicBtn.textContent = '❚❚';
+                })
+                .catch(e => {
+                    console.log("Music playback requires interaction");
+                    musicBtn.textContent = '♫';
+                });
+            
+            // Music toggle
+            musicBtn.addEventListener('click', toggleMusic);
+        }
+
+        // Toggle music function
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                backgroundMusic.pause();
+                musicBtn.textContent = '♫';
+            } else {
+                backgroundMusic.play()
+                    .then(() => musicBtn.textContent = '❚❚')
+                    .catch(e => console.log("Playback failed:", e));
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        // Play typing sound with fallback
+        function playTypingSound() {
+            typingSound.currentTime = 0;
+            typingSound.play().catch(e => {
+                console.log("Using fallback typing sound");
+                const fallback = new Audio(typingSound.src);
+                fallback.volume = 0.2;
+                fallback.play().catch(console.error);
+            });
+        }
+
+        // Typewriter function
+        function typeWriter() {
+            if (lineIndex >= poemLines.length) {
+                signatureElement.style.opacity = 1;
+                triggerConfetti();
+                typingSound.pause();
+                return;
+            }
+
+            const currentLine = poemLines[lineIndex];
+            currentParagraph = poemElement.children[lineIndex];
+
+            if (currentLine === "") {
+                lineIndex++;
+                setTimeout(typeWriter, pauseBetweenLines / 2);
+                return;
+            }
+
+            if (charIndex <= currentLine.length) {
+                currentParagraph.textContent = currentLine.substring(0, charIndex);
+                currentParagraph.innerHTML += '<span class="cursor"></span>';
+                currentParagraph.style.opacity = 1;
+                
+                if (charIndex % 3 === 0) {
+                    playTypingSound();
+                }
+
+                charIndex++;
+                setTimeout(typeWriter, typingSpeed);
+            } else {
+                charIndex = 0;
+                lineIndex++;
+                setTimeout(typeWriter, pauseBetweenLines);
+            }
+        }
+
+        // Confetti celebration
+        function triggerConfetti() {
+            confettiSound.play().catch(e => {
+                console.log("Using fallback confetti sound");
+                const fallback = new Audio(confettiSound.src);
+                fallback.play().catch(console.error);
+            });
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#D4AF37', '#F9D423', '#FFFFFF']
+            });
+        }
+    </script>
+</body>
+</html>
